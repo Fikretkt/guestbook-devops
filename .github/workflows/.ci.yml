@@ -1,0 +1,35 @@
+# 1. Pipeline'ın adı (GitHub arayüzünde böyle görünecek)
+name: Guestbook CI Pipeline
+
+# 2. Bu robot ne zaman çalışsın?
+on:
+  push:
+    branches: [ "main" ] # Sadece main koluna kod gönderilince çalış
+  pull_request:
+    branches: [ "main" ] # Birisi kodunu değiştirmek isteyip istek açınca çalış
+
+# 3. Robotun yapacağı işler (Jobs)
+jobs:
+  build-and-test:
+    # GitHub'ın bize bedava verdiği Ubuntu işletim sistemli sanal makine
+    runs-on: ubuntu-latest
+
+    steps:
+    # A - GitHub'daki kodlarımızı bu sanal makinenin içine kopyalar
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # B - Docker Compose'un çalışıp çalışmadığını test eder.
+    # Eğer Dockerfile'da bir hata varsa, bu adım 'Fail' olur ve kırmızı yanar.
+    - name: Build the Stack
+      run: docker-compose build
+
+    # C - Sistemin ayağa kalkıp kalkmadığını kontrol eder.
+    - name: Run Containers
+      run: docker-compose up -d
+
+    # D - Uygulama cevap veriyor mu? (Health Check)
+    - name: Check PHP Application Status
+      run: |
+        sleep 10 # Veritabanının açılması için biraz bekle
+        curl -f http://localhost:8081 || exit 1 # Eğer 200 OK dönmezse hata ver ve dur
