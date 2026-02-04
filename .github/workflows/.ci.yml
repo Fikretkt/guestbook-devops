@@ -31,14 +31,23 @@ jobs:
     # D - Uygulama cevap veriyor mu? (Health Check)
     - name: Check PHP Application Status
       run: |
-        # 1. Bekleme süresini 20 saniyeye çıkaralım. 
-        # MySQL'in ilk kurulumu (init.sql) zaman alır.
-        sleep 20 
+        echo "--- 30 Saniye Bekleniyor (MySQL Hazırlığı İçin) ---"
+        sleep 30
 
-        # 2. Konteyner loglarını basalım. 
-        # Eğer hata devam ederse, GitHub loglarında PHP'nin ne hata verdiğini görebileceğiz.
-        docker compose logs app
+        echo "--- DATABASE LOGS (MySQL ne durumda?) ---"
+        docker compose logs db
 
-        # 3. CURL komutu.
-        # -f: HTTP hatalarında (500 gibi) başarısız sayar.
-        curl -f http://localhost:8081 || exit 1
+        echo "--- API RESPONSE (Gerçek Hata Mesajı) ---"
+        # -f parametresini kaldırdık, böylece 500 hatası gelse de JSON içeriğini göreceğiz.
+        # -s: Sessiz mod, -S: Hata varsa göster.
+        curl -sS http://localhost:8081 | jq '.' || echo "CURL Hatası: Veri JSON değil veya servis kapalı"
+
+        echo "--- SON KONTROL ---"
+        # Pipeline'ın başarılı bitmesi için 200 OK gelip gelmediğini kontrol ediyoruz.
+        if curl -s --head  --request GET http://localhost:8081 | grep "200 OK" > /dev/null; then 
+           echo "Sistem Başarıyla Çalışıyor!"
+           exit 0
+        else
+           echo "Sistem hala 500 hatası veriyor, yukarıdaki logları incele."
+           exit 1
+        fi
