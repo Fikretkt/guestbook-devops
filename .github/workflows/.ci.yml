@@ -51,3 +51,10 @@ jobs:
            echo "Sistem hala 500 hatası veriyor, yukarıdaki logları incele."
            exit 1
         fi
+
+    - name: Debug Network and Containers
+      run: |
+        docker ps # Hangi konteynerler çalışıyor?
+        docker network ls # Ağlar oluşturulmuş mu?
+        sleep 30
+        curl -s http://localhost:8081 | jq '.'
