@@ -22,7 +22,7 @@ jobs:
     # B - Docker Compose'un çalışıp çalışmadığını test eder.
     # Eğer Dockerfile'da bir hata varsa, bu adım 'Fail' olur ve kırmızı yanar.
     - name: Build the Stack
-      run: docker-compose build
+      run: docker-compose --build
 
     # C - Sistemin ayağa kalkıp kalkmadığını kontrol eder.
     - name: Run Containers
