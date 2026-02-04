@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # PHP Uygulama Servisimiz
+  app:
+    build: ./app
+    container_name: guestbook_app
+    ports:
+      - "8081:80"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=guestbook_db
+      - DB_USER=fikret
+      - DB_PASS=secret123
+    depends_on:
+      - db
+
+  # MySQL Veritabanı Servisimiz
+  db:
+    image: mysql:8.0
+    container_name: guestbook_db
+    environment:
+      - MYSQL_DATABASE=guestbook_db
+      - MYSQL_USER=fikret
+      - MYSQL_PASSWORD=secret123
+      - MYSQL_ROOT_PASSWORD=root_pass
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # SQL dosyasını içeri aktar
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
