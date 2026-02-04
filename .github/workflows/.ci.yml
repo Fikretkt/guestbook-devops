@@ -31,5 +31,14 @@ jobs:
     # D - Uygulama cevap veriyor mu? (Health Check)
     - name: Check PHP Application Status
       run: |
-        sleep 10 # Veritabanının açılması için biraz bekle
-        curl -f http://localhost:8081 || exit 1 # Eğer 200 OK dönmezse hata ver ve dur
+        # 1. Bekleme süresini 20 saniyeye çıkaralım. 
+        # MySQL'in ilk kurulumu (init.sql) zaman alır.
+        sleep 20 
+
+        # 2. Konteyner loglarını basalım. 
+        # Eğer hata devam ederse, GitHub loglarında PHP'nin ne hata verdiğini görebileceğiz.
+        docker compose logs app
+
+        # 3. CURL komutu.
+        # -f: HTTP hatalarında (500 gibi) başarısız sayar.
+        curl -f http://localhost:8081 || exit 1
