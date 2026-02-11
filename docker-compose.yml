@@ -1,32 +1,42 @@
-version: '3.8'
+version: '3.8' # Docker Compose dosya formatı versiyonu
 
-services:
-  # PHP Uygulama Servisimiz
-  app:
-    build: ./app
-    container_name: guestbook_app
+services: # Servislerin (konteynerlerin) tanımlandığı ana blok
+  app: # PHP Uygulaması servisi
+    build: ./app # Dockerfile'ın nerede olduğunu belirtir (./app klasörü)
+    container_name: guestbook_app # Konteynerin terminalde görünecek özel adı
     ports:
-      - "8081:80"
-    environment:
-      - DB_HOST=db
+      - "8081:80" # Sol taraf: Senin bilgisayarın, Sağ taraf: Konteynerin içindeki Apache portu
+    environment: # PHP koduna getenv() ile gidecek olan değişkenler
+      - DB_HOST=db # MySQL servisine adı ile ulaşıyoruz (Docker Network sayesinde)
       - DB_NAME=guestbook_db
       - DB_USER=fikret
       - DB_PASS=secret123
     depends_on:
-      - db
+      - db : # Önce 'db' servisi başlasın, sonra 'app' başlasın kuralı
+          condition: service_started # DB servisi başlamadan App başlama der
+    networks:
+      - guestbook-net
 
-  # MySQL Veritabanı Servisimiz
-  db:
-    image: mysql:8.0
+  db: # MySQL Veritabanı servisi
+    image: mysql:8.0 # Docker Hub'dan çekilecek hazır imaj
     container_name: guestbook_db
     environment:
-      - MYSQL_DATABASE=guestbook_db
+      - MYSQL_DATABASE=guestbook_db # İlk açılışta oluşturulacak DB adı
       - MYSQL_USER=fikret
       - MYSQL_PASSWORD=secret123
-      - MYSQL_ROOT_PASSWORD=root_pass
+      - MYSQL_ROOT_PASSWORD=root_pass # Yönetici şifresi
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # SQL dosyasını içeri aktar
+      # init.sql dosyasını konteynerin özel başlangıç klasörüne bağlıyoruz.
+      # MySQL, bu klasöre düşen SQL dosyalarını ilk kurulumda otomatik çalıştırır.
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      # Verilerin konteyner silinse bile kalması için 'Volume' tanımı.
       - db_data:/var/lib/mysql
+    networks:
+      - guestbook-net
 
-volumes:
-  db_data:
+networks:
+  guestbook-net:
+    driver: bridge
+
+volumes: # Kalıcı verilerin saklanacağı disk alanları
+  db_data: # Bu isimde bir sanal disk oluşturur
